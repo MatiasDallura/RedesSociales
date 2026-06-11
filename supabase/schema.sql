@@ -11,6 +11,26 @@ create table if not exists public.user_settings (
   unique (user_id)
 );
 
+create table if not exists public.business_profiles (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  business_name text,
+  offer text,
+  target_audience text,
+  ideal_customer text,
+  target_locations text[] not null default '{}',
+  target_industries text[] not null default '{}',
+  good_lead_signals text[] not null default '{}',
+  bad_lead_signals text[] not null default '{}',
+  approximate_ticket text,
+  outreach_goal text,
+  tone text,
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (user_id)
+);
+
 create table if not exists public.social_accounts (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -93,6 +113,11 @@ create trigger set_user_settings_updated_at
 before update on public.user_settings
 for each row execute procedure public.set_updated_at();
 
+drop trigger if exists set_business_profiles_updated_at on public.business_profiles;
+create trigger set_business_profiles_updated_at
+before update on public.business_profiles
+for each row execute procedure public.set_updated_at();
+
 drop trigger if exists set_social_accounts_updated_at on public.social_accounts;
 create trigger set_social_accounts_updated_at
 before update on public.social_accounts
@@ -114,31 +139,43 @@ before update on public.daily_activity
 for each row execute procedure public.set_updated_at();
 
 alter table public.user_settings enable row level security;
+alter table public.business_profiles enable row level security;
 alter table public.social_accounts enable row level security;
 alter table public.campaigns enable row level security;
 alter table public.leads enable row level security;
 alter table public.lead_notes enable row level security;
 alter table public.daily_activity enable row level security;
 
+drop policy if exists "Users can manage own settings" on public.user_settings;
 create policy "Users can manage own settings" on public.user_settings
 for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+drop policy if exists "Users can manage own business profile" on public.business_profiles;
+create policy "Users can manage own business profile" on public.business_profiles
+for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "Users can manage own social accounts" on public.social_accounts;
 create policy "Users can manage own social accounts" on public.social_accounts
 for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+drop policy if exists "Users can manage own campaigns" on public.campaigns;
 create policy "Users can manage own campaigns" on public.campaigns
 for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+drop policy if exists "Users can manage own leads" on public.leads;
 create policy "Users can manage own leads" on public.leads
 for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+drop policy if exists "Users can manage own lead notes" on public.lead_notes;
 create policy "Users can manage own lead notes" on public.lead_notes
 for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+drop policy if exists "Users can manage own daily activity" on public.daily_activity;
 create policy "Users can manage own daily activity" on public.daily_activity
 for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 create index if not exists campaigns_user_id_idx on public.campaigns(user_id);
+create index if not exists business_profiles_user_id_idx on public.business_profiles(user_id);
 create index if not exists leads_user_id_idx on public.leads(user_id);
 create index if not exists leads_campaign_id_idx on public.leads(campaign_id);
 create index if not exists leads_status_idx on public.leads(status);

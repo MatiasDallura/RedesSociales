@@ -15,12 +15,13 @@ App web privada para descubrir, organizar y priorizar perfiles potenciales de Li
 ## Funcionalidades
 
 - Login privado sin registro público.
+- Business Profile / ICP para definir oferta, cliente ideal, señales buenas y señales malas.
 - Dashboard con campañas, perfiles encontrados, guardados, revisados y seguidos manualmente.
 - Cuentas sociales propias para referencia.
 - Campañas por plataforma, nicho, ubicación, keywords, hashtags y límite diario recomendado.
 - Resultados con datos mock, carga manual, CSV y estructura preparada para futuras APIs oficiales.
 - Discovery de candidatos reales mediante API de búsqueda web y URLs públicas indexadas.
-- Análisis IA de bio/descripción con score, explicación, sugerencia de acercamiento y categoría.
+- Análisis IA de bio/descripción con score, explicación, sugerencia de acercamiento y categoría usando campaña + ICP.
 - CRM de leads con filtros por plataforma, estado, nicho, campaña, score y ubicación.
 - Detalle de lead con notas y acciones manuales.
 - Sección Safety & Compliance con límites diarios, historial y alertas.
@@ -60,12 +61,28 @@ BING_SEARCH_ENDPOINT=https://api.bing.microsoft.com/v7.0/search
 
 1. Crea un proyecto en Supabase.
 2. Ve a SQL Editor.
-3. Ejecuta el contenido de `supabase/schema.sql`.
+3. Ejecuta el contenido de `supabase/schema.sql`. El archivo es re-ejecutable si luego agregas nuevas tablas.
 4. En Authentication, crea manualmente tu usuario con email y contraseña.
 5. Copia `Project URL` y `anon public key` a `.env.local`.
 6. Configura `NEXT_PUBLIC_ALLOWED_EMAIL` con el email creado.
 
 El esquema activa Row Level Security en todas las tablas y cada fila queda asociada a `auth.uid()`.
+
+## Business Profile / ICP
+
+Completa la página `Business ICP` antes de buscar leads. La app usa este perfil para mejorar el ranking:
+
+- qué vendes
+- a quién ayudas
+- cliente ideal
+- países o ciudades objetivo
+- industrias objetivo
+- señales de buen lead
+- señales de mal lead
+- ticket aproximado
+- objetivo y tono de contacto
+
+El ICP se combina con cada campaña para evitar que la IA puntúe solo por keywords superficiales.
 
 ## Configurar IA
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   BarChart3,
+  BriefcaseBusiness,
   FileUp,
   Home,
   LogOut,
@@ -20,6 +21,7 @@ import { cn } from "@/lib/utils";
 
 const nav = [
   { href: "/", label: "Dashboard", icon: Home },
+  { href: "/business-profile", label: "Business ICP", icon: BriefcaseBusiness },
   { href: "/accounts", label: "Cuentas", icon: WalletCards },
   { href: "/campaigns", label: "Campañas", icon: Target },
   { href: "/campaigns/new", label: "Crear campaña", icon: PlusCircle },

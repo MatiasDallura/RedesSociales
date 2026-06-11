@@ -5,10 +5,10 @@ import Papa from "papaparse";
 import { Upload } from "lucide-react";
 import { Card, DemoNotice, Field, inputClass, PageHeader } from "@/components/ui";
 import { LeadTable } from "@/components/lead-table";
-import { mockCampaigns } from "@/lib/mock-data";
+import { mockBusinessProfile, mockCampaigns } from "@/lib/mock-data";
 import { analyzeLeadLocally, inferPlatform } from "@/lib/local-analysis";
 import { createClient } from "@/lib/supabase/client";
-import type { Campaign, Lead } from "@/lib/types";
+import type { BusinessProfile, Campaign, Lead } from "@/lib/types";
 
 type CsvRow = {
   name?: string;
@@ -22,6 +22,7 @@ type CsvRow = {
 export default function ImportPage() {
   const supabase = createClient();
   const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns);
+  const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(mockBusinessProfile);
   const [campaignId, setCampaignId] = useState(mockCampaigns[0]?.id ?? "");
   const [preview, setPreview] = useState<Lead[]>([]);
   const [message, setMessage] = useState<string | null>(null);
@@ -30,11 +31,21 @@ export default function ImportPage() {
   useEffect(() => {
     async function load() {
       if (!supabase) return;
-      const { data } = await supabase.from("campaigns").select("*").order("name");
+      const {
+        data: { user }
+      } = await supabase.auth.getUser();
+      const [campaignRes, profileRes] = await Promise.all([
+        supabase.from("campaigns").select("*").order("name"),
+        user
+          ? supabase.from("business_profiles").select("*").eq("user_id", user.id).single()
+          : Promise.resolve({ data: null })
+      ]);
+      const data = campaignRes.data;
       if (data) {
         setCampaigns(data as Campaign[]);
         setCampaignId(data[0]?.id ?? "");
       }
+      if (profileRes.data) setBusinessProfile(profileRes.data as BusinessProfile);
     }
     load();
   }, [supabase]);
@@ -47,11 +58,12 @@ export default function ImportPage() {
         name: row.name,
         bio: row.bio,
         location: row.location,
-        campaign
+        campaign,
+        businessProfile
       })
     });
     const result = await response.json();
-    return result.analysis ?? analyzeLeadLocally({ name: row.name, bio: row.bio, location: row.location, campaign });
+    return result.analysis ?? analyzeLeadLocally({ name: row.name, bio: row.bio, location: row.location, campaign, businessProfile });
   }
 
   async function handleFile(file: File) {

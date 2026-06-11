@@ -14,6 +14,23 @@ const schema = z.object({
     hashtags: z.array(z.string()).default([]),
     target_profile_type: z.string().nullable().optional()
   }),
+  businessProfile: z
+    .object({
+      business_name: z.string().nullable().optional(),
+      offer: z.string().nullable().optional(),
+      target_audience: z.string().nullable().optional(),
+      ideal_customer: z.string().nullable().optional(),
+      target_locations: z.array(z.string()).default([]),
+      target_industries: z.array(z.string()).default([]),
+      good_lead_signals: z.array(z.string()).default([]),
+      bad_lead_signals: z.array(z.string()).default([]),
+      approximate_ticket: z.string().nullable().optional(),
+      outreach_goal: z.string().nullable().optional(),
+      tone: z.string().nullable().optional(),
+      notes: z.string().nullable().optional()
+    })
+    .nullable()
+    .optional(),
   limit: z.number().min(1).max(25).default(10)
 });
 
@@ -66,6 +83,7 @@ async function analyzeWithAi(input: {
   snippet: string;
   location?: string | null;
   campaign: z.infer<typeof schema>["campaign"];
+  businessProfile?: z.infer<typeof schema>["businessProfile"];
   origin: string;
 }): Promise<LeadAnalysis> {
   try {
@@ -76,7 +94,8 @@ async function analyzeWithAi(input: {
         name: input.name,
         bio: input.snippet,
         location: input.location,
-        campaign: input.campaign
+        campaign: input.campaign,
+        businessProfile: input.businessProfile
       })
     });
 
@@ -92,7 +111,8 @@ async function analyzeWithAi(input: {
     name: input.name,
     bio: input.snippet,
     location: input.location,
-    campaign: input.campaign
+    campaign: input.campaign,
+    businessProfile: input.businessProfile
   });
 }
 
@@ -135,7 +155,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
   }
 
-  const { campaign, limit } = parsed.data;
+  const { campaign, businessProfile, limit } = parsed.data;
   const query = buildQuery(campaign);
   const origin = new URL(request.url).origin;
 
@@ -157,6 +177,7 @@ export async function POST(request: Request) {
             snippet: result.snippet,
             location: campaign.location,
             campaign,
+            businessProfile,
             origin
           });
 

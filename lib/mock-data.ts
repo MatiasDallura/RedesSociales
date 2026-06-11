@@ -1,4 +1,4 @@
-import type { Campaign, DailyActivity, Lead, SocialAccount, UserSettings } from "@/lib/types";
+import type { BusinessProfile, Campaign, DailyActivity, Lead, SocialAccount, UserSettings } from "@/lib/types";
 
 const now = new Date().toISOString();
 
@@ -8,6 +8,25 @@ export const mockSettings: UserSettings = {
   default_daily_review_limit: 35,
   ai_model: "gpt-4o-mini",
   notes: "Modo demo hasta conectar Supabase.",
+  created_at: now,
+  updated_at: now
+};
+
+export const mockBusinessProfile: BusinessProfile = {
+  id: "business-demo",
+  user_id: "demo-user",
+  business_name: "Demo Growth Studio",
+  offer: "Sistema de prospección y contenido para negocios que venden servicios online.",
+  target_audience: "Dueños de negocios, coaches, consultores y founders que necesitan más conversaciones calificadas.",
+  ideal_customer: "Perfil activo, con oferta clara, audiencia definida y señales de inversión en crecimiento.",
+  target_locations: ["España", "México", "Latinoamérica"],
+  target_industries: ["Fitness coaching", "B2B SaaS", "Consultoría", "Agencias"],
+  good_lead_signals: ["vende servicios online", "publica contenido", "menciona crecimiento", "tiene oferta clara"],
+  bad_lead_signals: ["sin actividad reciente", "perfil personal sin negocio", "solo entretenimiento", "empleado sin decisión"],
+  approximate_ticket: "500-3000 USD",
+  outreach_goal: "Iniciar conversación manual y validar fit antes de proponer una llamada.",
+  tone: "Directo, profesional y consultivo.",
+  notes: "Completa este perfil con tu negocio real para mejorar el ranking.",
   created_at: now,
   updated_at: now
 };

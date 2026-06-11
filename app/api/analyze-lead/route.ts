@@ -16,6 +16,23 @@ const schema = z.object({
       target_profile_type: z.string().nullable().optional()
     })
     .nullable()
+    .optional(),
+  businessProfile: z
+    .object({
+      business_name: z.string().nullable().optional(),
+      offer: z.string().nullable().optional(),
+      target_audience: z.string().nullable().optional(),
+      ideal_customer: z.string().nullable().optional(),
+      target_locations: z.array(z.string()).default([]),
+      target_industries: z.array(z.string()).default([]),
+      good_lead_signals: z.array(z.string()).default([]),
+      bad_lead_signals: z.array(z.string()).default([]),
+      approximate_ticket: z.string().nullable().optional(),
+      outreach_goal: z.string().nullable().optional(),
+      tone: z.string().nullable().optional(),
+      notes: z.string().nullable().optional()
+    })
+    .nullable()
     .optional()
 });
 
@@ -28,7 +45,10 @@ export async function POST(request: Request) {
   if (!process.env.OPENAI_API_KEY) {
     return NextResponse.json({
       source: "local",
-      analysis: analyzeLeadLocally(parsed.data)
+      analysis: analyzeLeadLocally({
+        ...parsed.data,
+        businessProfile: parsed.data.businessProfile
+      })
     });
   }
 
@@ -65,7 +85,10 @@ export async function POST(request: Request) {
               bio: parsed.data.bio,
               location: parsed.data.location
             },
-            campaign: parsed.data.campaign
+            campaign: parsed.data.campaign,
+            business_profile: parsed.data.businessProfile,
+            scoring_guidance:
+              "Prioritize leads that match both the campaign and the business ICP. Penalize bad lead signals. Do not infer private facts not present in the profile text."
           })
         }
       ]
@@ -77,7 +100,10 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({
       source: "local",
-      analysis: analyzeLeadLocally(parsed.data)
+      analysis: analyzeLeadLocally({
+        ...parsed.data,
+        businessProfile: parsed.data.businessProfile
+      })
     });
   }
 }

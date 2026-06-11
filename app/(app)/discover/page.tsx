@@ -4,15 +4,16 @@ import { useEffect, useState } from "react";
 import { ExternalLink, Search, Save } from "lucide-react";
 import { LeadTable } from "@/components/lead-table";
 import { Card, DemoNotice, Field, inputClass, PageHeader } from "@/components/ui";
-import { mockCampaigns } from "@/lib/mock-data";
+import { mockBusinessProfile, mockCampaigns } from "@/lib/mock-data";
 import { createClient } from "@/lib/supabase/client";
-import type { Campaign, Lead } from "@/lib/types";
+import type { BusinessProfile, Campaign, Lead } from "@/lib/types";
 
 type DiscoveryCandidate = Omit<Lead, "id" | "user_id" | "campaign_id" | "status" | "notes" | "created_at" | "updated_at">;
 
 export default function DiscoverPage() {
   const supabase = createClient();
   const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns);
+  const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(mockBusinessProfile);
   const [campaignId, setCampaignId] = useState(mockCampaigns[0]?.id ?? "");
   const [limit, setLimit] = useState(10);
   const [query, setQuery] = useState("");
@@ -25,11 +26,20 @@ export default function DiscoverPage() {
   useEffect(() => {
     async function load() {
       if (!supabase) return;
-      const { data } = await supabase.from("campaigns").select("*").order("created_at", { ascending: false });
-      if (data) {
-        setCampaigns(data as Campaign[]);
-        setCampaignId(data[0]?.id ?? "");
+      const {
+        data: { user }
+      } = await supabase.auth.getUser();
+      const [campaignRes, profileRes] = await Promise.all([
+        supabase.from("campaigns").select("*").order("created_at", { ascending: false }),
+        user
+          ? supabase.from("business_profiles").select("*").eq("user_id", user.id).single()
+          : Promise.resolve({ data: null })
+      ]);
+      if (campaignRes.data) {
+        setCampaigns(campaignRes.data as Campaign[]);
+        setCampaignId(campaignRes.data[0]?.id ?? "");
       }
+      if (profileRes.data) setBusinessProfile(profileRes.data as BusinessProfile);
     }
     load();
   }, [supabase]);
@@ -49,7 +59,7 @@ export default function DiscoverPage() {
     const response = await fetch("/api/discover-profiles", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ campaign, limit })
+      body: JSON.stringify({ campaign, businessProfile, limit })
     });
     const result = await response.json();
     setQuery(result.query ?? "");

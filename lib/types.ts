@@ -25,6 +25,25 @@ export type UserSettings = {
   updated_at: string;
 };
 
+export type BusinessProfile = {
+  id: string;
+  user_id: string;
+  business_name: string | null;
+  offer: string | null;
+  target_audience: string | null;
+  ideal_customer: string | null;
+  target_locations: string[];
+  target_industries: string[];
+  good_lead_signals: string[];
+  bad_lead_signals: string[];
+  approximate_ticket: string | null;
+  outreach_goal: string | null;
+  tone: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type SocialAccount = {
   id: string;
   user_id: string;

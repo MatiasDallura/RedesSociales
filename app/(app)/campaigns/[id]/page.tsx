@@ -6,14 +6,16 @@ import { Sparkles } from "lucide-react";
 import { LeadTable } from "@/components/lead-table";
 import { Badge, Card, DemoNotice, Field, inputClass, PageHeader } from "@/components/ui";
 import { mockCampaigns, mockLeads } from "@/lib/mock-data";
+import { mockBusinessProfile } from "@/lib/mock-data";
 import { analyzeLeadLocally, inferPlatform } from "@/lib/local-analysis";
 import { createClient } from "@/lib/supabase/client";
-import type { Campaign, Lead } from "@/lib/types";
+import type { BusinessProfile, Campaign, Lead } from "@/lib/types";
 
 export default function CampaignResultsPage() {
   const params = useParams<{ id: string }>();
   const supabase = createClient();
   const [campaign, setCampaign] = useState<Campaign | null>(mockCampaigns.find((item) => item.id === params.id) ?? mockCampaigns[0]);
+  const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(mockBusinessProfile);
   const [leads, setLeads] = useState<Lead[]>(mockLeads.filter((lead) => lead.campaign_id === params.id));
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ name: "", url: "", bio: "", location: "" });
@@ -22,12 +24,19 @@ export default function CampaignResultsPage() {
   useEffect(() => {
     async function load() {
       if (!supabase) return;
-      const [campaignRes, leadRes] = await Promise.all([
+      const {
+        data: { user }
+      } = await supabase.auth.getUser();
+      const [campaignRes, leadRes, businessProfileRes] = await Promise.all([
         supabase.from("campaigns").select("*").eq("id", params.id).single(),
-        supabase.from("leads").select("*").eq("campaign_id", params.id).order("relevance_score", { ascending: false })
+        supabase.from("leads").select("*").eq("campaign_id", params.id).order("relevance_score", { ascending: false }),
+        user
+          ? supabase.from("business_profiles").select("*").eq("user_id", user.id).single()
+          : Promise.resolve({ data: null })
       ]);
       if (campaignRes.data) setCampaign(campaignRes.data as Campaign);
       if (leadRes.data) setLeads(leadRes.data as Lead[]);
+      if (businessProfileRes.data) setBusinessProfile(businessProfileRes.data as BusinessProfile);
     }
     load();
   }, [params.id, supabase]);
@@ -46,11 +55,12 @@ export default function CampaignResultsPage() {
         name: form.name,
         bio: form.bio,
         location: form.location,
-        campaign
+        campaign,
+        businessProfile
       })
     });
     const result = await response.json();
-    return result.analysis ?? analyzeLeadLocally({ bio: form.bio, name: form.name, location: form.location, campaign });
+    return result.analysis ?? analyzeLeadLocally({ bio: form.bio, name: form.name, location: form.location, campaign, businessProfile });
   }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
