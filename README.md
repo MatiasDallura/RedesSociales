@@ -19,6 +19,7 @@ App web privada para descubrir, organizar y priorizar perfiles potenciales de Li
 - Cuentas sociales propias para referencia.
 - Campañas por plataforma, nicho, ubicación, keywords, hashtags y límite diario recomendado.
 - Resultados con datos mock, carga manual, CSV y estructura preparada para futuras APIs oficiales.
+- Discovery de candidatos reales mediante API de búsqueda web y URLs públicas indexadas.
 - Análisis IA de bio/descripción con score, explicación, sugerencia de acercamiento y categoría.
 - CRM de leads con filtros por plataforma, estado, nicho, campaña, score y ubicación.
 - Detalle de lead con notas y acciones manuales.
@@ -47,6 +48,8 @@ NEXT_PUBLIC_ALLOWED_EMAIL=
 OPENAI_API_KEY=
 OPENAI_BASE_URL=
 OPENAI_MODEL=gpt-4o-mini
+BING_SEARCH_API_KEY=
+BING_SEARCH_ENDPOINT=https://api.bing.microsoft.com/v7.0/search
 ```
 
 `NEXT_PUBLIC_ALLOWED_EMAIL` es opcional, pero recomendado para restringir el login a tu email.
@@ -79,6 +82,12 @@ name,url,bio,location,platform,niche
 ```
 
 La importación limita la vista previa a 100 filas por carga. Los duplicados se evitan con la restricción única `(user_id, url)`.
+
+## Discovery real de perfiles
+
+La página `Discovery` puede encontrar candidatos reales usando una API de búsqueda web configurada con `BING_SEARCH_API_KEY`. La app genera queries con `site:linkedin.com`, `site:facebook.com` o `site:instagram.com`, filtra URLs públicas indexadas, analiza el snippet y permite guardar candidatos en el CRM.
+
+Este módulo no entra a LinkedIn, Facebook ni Instagram para scrapeo directo. Si no configuras la clave de búsqueda, la app genera enlaces de búsqueda manual para Google y Bing.
 
 ## Deploy en Vercel
 
