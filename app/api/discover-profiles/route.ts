@@ -41,19 +41,30 @@ type SearchResult = {
 };
 
 function siteForPlatform(platform: Platform) {
-  if (platform === "LinkedIn") return "site:linkedin.com/in OR site:linkedin.com/company";
+  if (platform === "LinkedIn") return "(site:linkedin.com/in OR site:linkedin.com/company)";
   if (platform === "Facebook") return "site:facebook.com";
   return "site:instagram.com";
 }
 
-function buildQuery(campaign: z.infer<typeof schema>["campaign"]) {
+function quote(value: string) {
+  return `"${value.replace(/"/g, '\\"')}"`;
+}
+
+function buildQuery(
+  campaign: z.infer<typeof schema>["campaign"],
+  businessProfile?: z.infer<typeof schema>["businessProfile"]
+) {
   const terms = [
     siteForPlatform(campaign.platform),
-    `"${campaign.niche}"`,
-    campaign.location ? `"${campaign.location}"` : "",
-    campaign.target_profile_type ? `"${campaign.target_profile_type}"` : "",
-    ...campaign.keywords.slice(0, 5).map((keyword) => `"${keyword}"`),
-    ...campaign.hashtags.slice(0, 4)
+    quote(campaign.niche),
+    campaign.location ? quote(campaign.location) : "",
+    campaign.target_profile_type ? quote(campaign.target_profile_type) : "",
+    ...campaign.keywords.slice(0, 5).map((keyword) => quote(keyword)),
+    ...campaign.hashtags.slice(0, 4),
+    ...(businessProfile?.target_industries ?? []).slice(0, 3).map((item) => quote(item)),
+    ...(businessProfile?.target_audience ? [quote(businessProfile.target_audience)] : []),
+    ...(businessProfile?.ideal_customer ? [quote(businessProfile.ideal_customer)] : []),
+    ...(businessProfile?.good_lead_signals ?? []).slice(0, 3).map((item) => quote(item))
   ].filter(Boolean);
 
   return terms.join(" ");
@@ -119,7 +130,9 @@ async function analyzeWithAi(input: {
 async function searchSearxng(query: string, limit: number): Promise<SearchResult[]> {
   const endpoint = process.env.SEARXNG_BASE_URL;
 
-  if (!endpoint) return [];
+  if (!endpoint) {
+    return [];
+  }
 
   const url = new URL("/search", endpoint.endsWith("/") ? endpoint : `${endpoint}/`);
   url.searchParams.set("q", query);
@@ -152,8 +165,9 @@ export async function POST(request: Request) {
   }
 
   const { campaign, businessProfile, limit } = parsed.data;
-  const query = buildQuery(campaign);
+  const query = buildQuery(campaign, businessProfile);
   const origin = new URL(request.url).origin;
+  const providerConfigured = Boolean(process.env.SEARXNG_BASE_URL);
 
   try {
     const rawResults = await searchSearxng(query, limit * 2);
@@ -195,14 +209,16 @@ export async function POST(request: Request) {
     );
 
     return NextResponse.json({
-      source: process.env.SEARXNG_BASE_URL ? "searxng" : "manual-query",
+      source: providerConfigured ? "searxng" : "manual-query",
+      providerConfigured,
       query,
       results: analyzed
     });
   } catch (error) {
     return NextResponse.json(
       {
-        source: "manual-query",
+        source: providerConfigured ? "searxng" : "manual-query",
+        providerConfigured,
         query,
         results: [],
         error: error instanceof Error ? error.message : "Search failed"

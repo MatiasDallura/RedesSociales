@@ -18,6 +18,7 @@ export default function DiscoverPage() {
   const [limit, setLimit] = useState(10);
   const [query, setQuery] = useState("");
   const [source, setSource] = useState("");
+  const [providerConfigured, setProviderConfigured] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -64,6 +65,7 @@ export default function DiscoverPage() {
     const result = await response.json();
     setQuery(result.query ?? "");
     setSource(result.source ?? "");
+    setProviderConfigured(Boolean(result.providerConfigured));
 
     const mapped: Lead[] = (result.results ?? []).map((item: DiscoveryCandidate) => ({
       ...item,
@@ -80,7 +82,9 @@ export default function DiscoverPage() {
     setMessage(
       mapped.length > 0
         ? `${mapped.length} candidatos encontrados desde resultados públicos indexados.`
-        : "No hay resultados automáticos. Usa los enlaces de búsqueda manual o configura una API de búsqueda web."
+        : providerConfigured
+          ? "El proveedor respondió, pero no devolvió perfiles que encajen con esta campaña. Ajusta la query o prueba otro proveedor."
+          : "Falta configurar `SEARXNG_BASE_URL` o la instancia no respondió. Usa los enlaces manuales o revisa Diagnóstico."
     );
     setLoading(false);
   }
@@ -173,6 +177,15 @@ export default function DiscoverPage() {
                   Fuente: {source || "manual"}
                 </span>
               </div>
+              {!providerConfigured ? (
+                <p className="mt-3 text-xs text-slate-500">
+                  Discovery está en modo manual porque no hay instancia SearXNG activa. Revisa{" "}
+                  <a className="text-brand-700 hover:text-brand-600" href="/diagnostics">
+                    Diagnóstico
+                  </a>
+                  .
+                </p>
+              ) : null}
             </div>
           ) : null}
         </Card>
