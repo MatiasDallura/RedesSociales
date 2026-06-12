@@ -25,6 +25,7 @@ App web privada para descubrir, organizar y priorizar perfiles potenciales de Li
 - CRM de leads con filtros por plataforma, estado, nicho, campaña, score y ubicación.
 - Detalle de lead con notas y acciones manuales.
 - Sección Safety & Compliance con límites diarios, historial y alertas.
+- Diagnóstico privado para validar variables, Supabase, schema, auth y SearXNG.
 
 ## Instalación local
 
@@ -118,6 +119,7 @@ SEARXNG_BASE_URL=https://tu-instancia-searxng.com
 3. Agrega las variables de entorno en Project Settings.
 4. Ejecuta el deploy.
 5. Crea tu usuario en Supabase antes de entrar.
+6. Abre `/diagnostics` dentro de la app para confirmar que todo quedó conectado.
 
 ## Límites de cumplimiento
 

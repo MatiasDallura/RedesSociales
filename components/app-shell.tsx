@@ -12,6 +12,7 @@ import {
   Search,
   Settings,
   ShieldCheck,
+  Stethoscope,
   Target,
   Users,
   WalletCards
@@ -29,6 +30,7 @@ const nav = [
   { href: "/leads", label: "CRM leads", icon: Users },
   { href: "/import", label: "Importar CSV", icon: FileUp },
   { href: "/safety", label: "Safety", icon: ShieldCheck },
+  { href: "/diagnostics", label: "Diagnóstico", icon: Stethoscope },
   { href: "/settings", label: "Configuración", icon: Settings }
 ];
 
