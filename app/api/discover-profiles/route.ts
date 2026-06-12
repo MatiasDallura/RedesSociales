@@ -50,21 +50,32 @@ function quote(value: string) {
   return `"${value.replace(/"/g, '\\"')}"`;
 }
 
+function splitTerms(value: string) {
+  return value
+    .split(/[,;\n]/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
 function buildQuery(
   campaign: z.infer<typeof schema>["campaign"],
   businessProfile?: z.infer<typeof schema>["businessProfile"]
 ) {
+  const campaignNicheTerms = splitTerms(campaign.niche).slice(0, 3);
+  const campaignRoleTerms = campaign.target_profile_type ? splitTerms(campaign.target_profile_type).slice(0, 4) : [];
+  const businessIndustryTerms = (businessProfile?.target_industries ?? []).flatMap(splitTerms).slice(0, 3);
+  const businessSignalTerms = (businessProfile?.good_lead_signals ?? []).flatMap(splitTerms).slice(0, 3);
+
   const terms = [
     siteForPlatform(campaign.platform),
-    quote(campaign.niche),
+    ...campaignNicheTerms.map(quote),
     campaign.location ? quote(campaign.location) : "",
-    campaign.target_profile_type ? quote(campaign.target_profile_type) : "",
+    ...campaignRoleTerms.map(quote),
     ...campaign.keywords.slice(0, 5).map((keyword) => quote(keyword)),
     ...campaign.hashtags.slice(0, 4),
-    ...(businessProfile?.target_industries ?? []).slice(0, 3).map((item) => quote(item)),
-    ...(businessProfile?.target_audience ? [quote(businessProfile.target_audience)] : []),
-    ...(businessProfile?.ideal_customer ? [quote(businessProfile.ideal_customer)] : []),
-    ...(businessProfile?.good_lead_signals ?? []).slice(0, 3).map((item) => quote(item))
+    ...businessIndustryTerms.map(quote),
+    ...(businessProfile?.offer ? splitTerms(businessProfile.offer).slice(0, 2).map(quote) : []),
+    ...businessSignalTerms.map(quote)
   ].filter(Boolean);
 
   return terms.join(" ");

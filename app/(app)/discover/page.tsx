@@ -63,9 +63,10 @@ export default function DiscoverPage() {
       body: JSON.stringify({ campaign, businessProfile, limit })
     });
     const result = await response.json();
+    const nextProviderConfigured = Boolean(result.providerConfigured);
     setQuery(result.query ?? "");
     setSource(result.source ?? "");
-    setProviderConfigured(Boolean(result.providerConfigured));
+    setProviderConfigured(nextProviderConfigured);
 
     const mapped: Lead[] = (result.results ?? []).map((item: DiscoveryCandidate) => ({
       ...item,
@@ -82,7 +83,7 @@ export default function DiscoverPage() {
     setMessage(
       mapped.length > 0
         ? `${mapped.length} candidatos encontrados desde resultados públicos indexados.`
-        : providerConfigured
+        : nextProviderConfigured
           ? "El proveedor respondió, pero no devolvió perfiles que encajen con esta campaña. Ajusta la query o prueba otro proveedor."
           : "Falta configurar `SEARXNG_BASE_URL` o la instancia no respondió. Usa los enlaces manuales o revisa Diagnóstico."
     );
