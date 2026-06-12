@@ -116,23 +116,19 @@ async function analyzeWithAi(input: {
   });
 }
 
-async function searchBing(query: string, limit: number): Promise<SearchResult[]> {
-  const key = process.env.BING_SEARCH_API_KEY;
-  const endpoint = process.env.BING_SEARCH_ENDPOINT || "https://api.bing.microsoft.com/v7.0/search";
+async function searchSearxng(query: string, limit: number): Promise<SearchResult[]> {
+  const endpoint = process.env.SEARXNG_BASE_URL;
 
-  if (!key) return [];
+  if (!endpoint) return [];
 
-  const url = new URL(endpoint);
+  const url = new URL("/search", endpoint.endsWith("/") ? endpoint : `${endpoint}/`);
   url.searchParams.set("q", query);
-  url.searchParams.set("count", String(limit));
-  url.searchParams.set("responseFilter", "Webpages");
-  url.searchParams.set("safeSearch", "Moderate");
-  url.searchParams.set("textFormat", "Raw");
+  url.searchParams.set("format", "json");
+  url.searchParams.set("categories", "general");
+  url.searchParams.set("safesearch", "1");
 
-  const response = await fetch(url, {
-    headers: {
-      "Ocp-Apim-Subscription-Key": key
-    },
+  const response = await fetch(url.toString(), {
+    headers: { Accept: "application/json" },
     next: { revalidate: 0 }
   });
 
@@ -141,10 +137,10 @@ async function searchBing(query: string, limit: number): Promise<SearchResult[]>
   }
 
   const data = await response.json();
-  return (data.webPages?.value ?? []).map((item: { name?: string; url?: string; snippet?: string }) => ({
-    name: item.name ?? "Perfil sin nombre",
+  return (data.results ?? []).map((item: { title?: string; url?: string; content?: string }) => ({
+    name: item.title ?? "Perfil sin nombre",
     url: item.url ?? "",
-    snippet: item.snippet ?? ""
+    snippet: item.content ?? ""
   }));
 }
 
@@ -160,7 +156,7 @@ export async function POST(request: Request) {
   const origin = new URL(request.url).origin;
 
   try {
-    const rawResults = await searchBing(query, limit * 2);
+    const rawResults = await searchSearxng(query, limit * 2);
     const unique = new Map<string, SearchResult>();
 
     rawResults
@@ -199,7 +195,7 @@ export async function POST(request: Request) {
     );
 
     return NextResponse.json({
-      source: process.env.BING_SEARCH_API_KEY ? "bing-web-search" : "manual-query",
+      source: process.env.SEARXNG_BASE_URL ? "searxng" : "manual-query",
       query,
       results: analyzed
     });

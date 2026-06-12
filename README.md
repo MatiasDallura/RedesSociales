@@ -49,8 +49,7 @@ NEXT_PUBLIC_ALLOWED_EMAIL=
 OPENAI_API_KEY=
 OPENAI_BASE_URL=
 OPENAI_MODEL=gpt-4o-mini
-BING_SEARCH_API_KEY=
-BING_SEARCH_ENDPOINT=https://api.bing.microsoft.com/v7.0/search
+SEARXNG_BASE_URL=
 ```
 
 `NEXT_PUBLIC_ALLOWED_EMAIL` es opcional, pero recomendado para restringir el login a tu email.
@@ -102,9 +101,15 @@ La importación limita la vista previa a 100 filas por carga. Los duplicados se 
 
 ## Discovery real de perfiles
 
-La página `Discovery` puede encontrar candidatos reales usando una API de búsqueda web configurada con `BING_SEARCH_API_KEY`. La app genera queries con `site:linkedin.com`, `site:facebook.com` o `site:instagram.com`, filtra URLs públicas indexadas, analiza el snippet y permite guardar candidatos en el CRM.
+La página `Discovery` puede encontrar candidatos reales usando una instancia SearXNG configurada con `SEARXNG_BASE_URL`. La app genera queries con `site:linkedin.com`, `site:facebook.com` o `site:instagram.com`, filtra URLs públicas indexadas, analiza el snippet y permite guardar candidatos en el CRM.
 
-Este módulo no entra a LinkedIn, Facebook ni Instagram para scrapeo directo. Si no configuras la clave de búsqueda, la app genera enlaces de búsqueda manual para Google y Bing.
+SearXNG es gratis y open-source, pero para resultados estables conviene usar una instancia propia o controlada con `format=json` habilitado. Muchas instancias públicas bloquean JSON o aplican rate limits. Este módulo no entra a LinkedIn, Facebook ni Instagram para scrapeo directo. Si no configuras `SEARXNG_BASE_URL`, la app genera enlaces de búsqueda manual para Google y Bing.
+
+Ejemplo:
+
+```bash
+SEARXNG_BASE_URL=https://tu-instancia-searxng.com
+```
 
 ## Deploy en Vercel
 
